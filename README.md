@@ -1,194 +1,187 @@
-## ⚙️ Project Overview (Smart e-Banking System)
+Work In Progress
+# ⚙️ Project Overview: Smart e-Banking System (SEBS)
 
 **Owned by:** MotionProgramming (Md Abdullah Rajeeb)
 
 ---
 
-## 🏦 SEBS (Smart e-Banking System)
+## 🏦 Introduction
 
-### 📌 Introduction
+The **Smart e-Banking System (SEBS)** is a modern, secure, and scalable web application designed to deliver seamless online banking services. Powered by a robust Go backend and a dynamic frontend built with React or Vue, SEBS supports multi-account management, secure fund transfers, real-time notifications, and detailed analytics.
 
-**Smart e-Banking System (SEBS)** is a **Go (Golang)-based web application** designed to provide secure and efficient online banking services. Traditional banking systems are often limited to physical branches or outdated interfaces. SEBS automates banking operations with a fast, modern backend in Go, secure user management, real-time transactions, and an interactive frontend, making banking accessible anytime, anywhere.
-
----
-
-### 🎯 Objectives
-
-* Store and manage bank account and transaction data securely.
-* Enable users to **view balance**, **transfer funds**, and **view transaction history**.
-* Allow admins to **manage users, apply interest**, and monitor system activity.
-* Reduce manual errors and paperwork through a smart, digital system.
-* Provide secure login and **role-based access control** for system integrity.
+This platform is engineered to meet enterprise-grade security and performance standards while providing an intuitive and responsive user experience accessible from any device.
 
 ---
 
-### 🛠 Tools & Technologies
+## 🎯 Objectives
 
-* **Programming Language:** Go (Golang)
-* **Frontend:** HTML, CSS, Bootstrap, JavaScript
-* **Backend:** Go (`Gin` or `Echo` framework)
-* **Database:** SQL (MySQL or PostgreSQL recommended)
-* **Authentication:** JWT (JSON Web Tokens)
-* **Visualization:** Chart.js
-* **Testing:** Postman (for API testing)
-
----
-
-### ✨ Features
-
-#### 🔑 User Authentication
-
-* Secure login and registration system.
-* Supports multiple user roles: Admin and Customer.
-* JWT-based session handling for security.
-
-#### 💳 Banking Operations
-
-* View account details and current balance.
-* Transfer funds between customer accounts.
-* View transaction history with filters (date, amount, account).
-
-#### 💰 Interest Management
-
-* Admin can set interest rates per account.
-* Automatically or manually apply interest monthly.
-* Logs all interest payments for transparency.
-
-#### 📊 Reporting
-
-* Dashboard with financial statistics and user activity.
-* Generate charts for transaction volume, interest paid, etc.
-* Downloadable reports (CSV/PDF - optional).
-
-#### ⚡ JavaScript Enhancements
-
-* Form validation for inputs like amount, date, and login.
-* Real-time feedback on transfers and balance updates.
-* Dynamic dashboard with charts powered by Chart.js.
+* Implement secure, role-based access control for Admins, Customers, and Auditors.
+* Enable multi-account management with real-time balance updates.
+* Support instant and secure fund transfers with comprehensive transaction histories.
+* Deliver real-time notifications via WebSocket for transactions, alerts, and system updates.
+* Automate scheduled tasks for interest calculation and fee management.
+* Provide interactive dashboards and analytics to empower users and administrators.
+* Ensure robust security with JWT authentication, optional two-factor authentication (2FA), and encrypted data storage.
+* Facilitate scalable deployment through containerization and CI/CD pipelines.
 
 ---
 
-### 🖥 System Design
+## 🛠 Tools & Technologies
 
-* **Input:** Users interact with forms for login, transfers, and account views.
-* **Process:**
-
-  * Go backend validates inputs, processes logic, and accesses the database using GORM.
-  * Business logic applies interest and handles transactions securely.
-* **Output:** Data is returned via JSON and rendered dynamically on the frontend using JavaScript.
+* **Backend:** Go (Gin or Echo framework), JWT Authentication, Gorilla WebSocket, GORM ORM, Redis Pub/Sub
+* **Api Testing :** Postman
+* **Frontend:** React + Bootstrap, Chart.js
+* **Database:** MySQL or other SQL-compatible database
+* **Security:** bcrypt for password hashing, HTTPS/TLS, rate limiting middleware
+* **DevOps:** Docker, Docker Compose, GitHub Actions (CI/CD)
+* **Documentation:** Swagger/OpenAPI
 
 ---
 
-### 📂 Database Design
+## ✨ Core Features
 
-#### Users Table
+### 🔐 Authentication & Authorization
+
+* Secure login using JWT and optional 2FA (e.g., TOTP).
+* Role-based access control for Admin, Customer, and Auditor.
+* Password encryption with bcrypt and support for refresh tokens.
+
+### 💳 Account Management
+
+* Support multiple account types (Savings, Checking) per user.
+* Real-time balance updates and detailed account overview.
+* Admin capabilities to create, update, and deactivate accounts.
+
+### 💸 Fund Transfers & Transactions
+
+* Instant, secure intra-bank fund transfers.
+* Detailed transaction history with advanced filtering (date, amount, account).
+* Transaction audit logs including timestamps and IP tracking.
+
+### 📊 Interactive Analytics & Reporting
+
+* Dynamic charts for spending trends, income vs. expenses, and account summaries.
+* Admin dashboard displaying system health and user activity metrics.
+* Exportable reports in CSV and PDF formats for offline analysis.
+
+### ⚡ Real-time Notifications
+
+* WebSocket-powered alerts for transactions, interest credits, and system messages.
+* Frontend notification center with read/unread states and historical access.
+
+### ⏰ Scheduled Jobs
+
+* Automated monthly interest calculations and fee deductions.
+* Notification triggers following scheduled job executions.
+
+---
+
+## 🖥 System Architecture
+
+* **Input:** Users interact through web or mobile interfaces to manage accounts, transfer funds, view transactions, and receive alerts.
+* **Process:** Backend Go services handle business logic, validate inputs, manage database operations, and push real-time events.
+* **Output:** Dynamic UI updates, detailed reports, and instant notifications delivered to users in real-time.
+
+---
+
+## 📂 Database Design
+
+**Users Table**
 
 * `user_id` (Primary Key)
 * `username`
-* `password` (hashed)
-* `role` (Admin / Customer)
+* `email`
+* `password_hash`
+* `role` (Admin / Customer / Auditor)
+* `2fa_enabled` (Boolean)
 
-#### Accounts Table
+**Accounts Table**
 
 * `account_id` (Primary Key)
 * `user_id` (Foreign Key)
-* `balance`
 * `account_type` (Savings / Checking)
-* `interest_rate`
+* `balance`
+* `status` (Active / Inactive)
 
-#### Transactions Table
+**Transactions Table**
 
 * `transaction_id` (Primary Key)
 * `from_account`
 * `to_account`
 * `amount`
 * `timestamp`
+* `transaction_type` (Transfer / Deposit / Withdrawal)
 * `description`
 
-#### InterestHistory Table
+**Notifications Table**
 
-* `interest_id` (Primary Key)
-* `account_id`
-* `interest_amount`
-* `applied_on`
-
----
-
-### 🚀 Workflow
-
-1. User logs into the system via the frontend.
-2. Form inputs are sent to the backend through HTTP POST requests.
-3. Backend (written in Go) validates the input, handles business logic, and interacts with the SQL database using GORM.
-4. Transactions and interest are logged and updated in the database.
-5. The frontend dynamically displays the results and updates the UI using JavaScript and Chart.js.
+* `notification_id` (Primary Key)
+* `user_id` (Foreign Key)
+* `message`
+* `is_read` (Boolean)
+* `created_at`
 
 ---
 
-### 📑 Expected Outcomes
+## 🚀 Workflow
 
-* Easy and secure access to digital banking features.
-* Accurate and fast transaction processing.
-* Reliable interest calculation and application.
-* Data-driven insights for admins via reports and analytics.
+1. User logs in and receives a JWT token.
+2. User performs operations such as viewing accounts or transferring funds.
+3. Backend validates requests, processes transactions, and updates the database.
+4. Real-time notifications are pushed to the user’s frontend via WebSocket.
+5. Scheduled jobs compute interests and fees, triggering notifications.
+6. Users and admins access detailed reports and analytics dashboards.
+
+---
+## 📑 Expected Outcomes
+
+* A highly secure, responsive, and scalable digital banking platform.
+* Real-time interaction between users and backend services for instant updates.
+* Comprehensive transaction management with full audit trails.
+* Intuitive dashboards enabling data-driven decision making.
+* Deployment-ready architecture suitable for cloud or on-premises environments.
 
 ---
 
-### 📌 How to Run
+## ✅ Conclusion
+
+SEBS delivers a premium-grade solution tailored to modern digital banking needs. Combining a performant Go backend, real-time WebSocket notifications, and rich frontend visualizations, it ensures security, scalability, and an excellent user experience. This project serves both academic purposes and real-world deployment scenarios.
+
+---
+
+## 📌 How to Run
 
 ```bash
 # Clone the repository
 git clone https://github.com/MotionProgramming/Smart-e-Banking-System.git
-cd Smart-e-Banking-System
+
+# Backend setup
+cd Smart-e-Banking-System/backend
+go mod download
+# Configure environment variables for DB, JWT secrets, Redis
+go run main.go
+# Or build and run with Docker
+
+# Frontend setup
+cd ../frontend
+npm install
+npm start
+
+# Open browser at http://localhost:3000
 ```
 
-1. Open the project in VS Code or GoLand.
-2. Import the database from the `database/sebs.sql` file.
-3. Run the Go server:
+---
 
-   ```bash
-   go mod tidy
-   go run main.go
-   ```
-4. Open your browser at:
-   👉 `http://localhost:8080/`
+## 👨‍💻 User Roles
+
+* **Admin:** Manage users, accounts, system settings, and generate reports.
+* **Customer:** Manage personal accounts, transfer funds, view transactions, receive notifications.
+* **Auditor:** Read-only access to transaction logs and reports for compliance monitoring.
 
 ---
 
-### 📮 API Testing with Postman
+## 📄 License
 
-* Use the provided Postman Collection (`/postman/SEBS-Collection.json`)
-* Test all major endpoints:
-
-  * `POST /login`
-  * `POST /register`
-  * `GET /accounts`
-  * `POST /transfer`
-  * `GET /transactions`
-  * `POST /apply-interest`
+This project is intended solely for educational and demonstration purposes.
 
 ---
-
-### 👨‍💻 User Roles
-
-* **Admin**
-
-  * Create/manage users and accounts
-  * Set interest rates
-  * View all system transactions
-  * Monitor system usage
-
-* **Customer**
-
-  * View personal account and balance
-  * Transfer funds
-  * View transaction history
-
----
-
-### 📄 License
-
-This project is for **educational purposes only** and not intended for real banking deployment without security and compliance verification.
-
----
-
-Would you like the **Postman collection template** or the **API documentation format (Swagger)?** I can generate those next.
