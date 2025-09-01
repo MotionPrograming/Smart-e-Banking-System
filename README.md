@@ -1,4 +1,5 @@
-Work In Progress
+# ⚙️ Project  status: Work in progress..........
+
 # ⚙️ Project Overview: Smart e-Banking System (SEBS)
 
 **Owned by:** MotionProgramming (Md Abdullah Rajeeb)
