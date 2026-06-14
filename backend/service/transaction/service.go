@@ -1,22 +1,31 @@
 package transaction
 
 import (
-	accountRepo "smart-e-banking/backend/repository/account"
-	transactionRepo "smart-e-banking/backend/repository/transaction"
+	"smart-e-banking/backend/domain"
+	"smart-e-banking/backend/repository/account"
+	"smart-e-banking/backend/repository/transaction"
 
 	"github.com/jmoiron/sqlx"
 )
 
-type service struct {
-	db              *sqlx.DB
-	accountRepo     accountRepo.Repository
-	transactionRepo transactionRepo.Repository
+type Service interface {
+	CreateTransaction(tx domain.Transaction) (*domain.Transaction, error)
+	GetTransactionByID(id int64) (*domain.Transaction, error)
+	GetTransactionsByAccountID(accountID int64) ([]domain.Transaction, error)
 }
 
-func NewService(db *sqlx.DB, transactionRepo transactionRepo.Repository, accountRepo accountRepo.Repository) *service {
+type service struct {
+	db              *sqlx.DB
+	transactionRepo transaction.Repository // সঠিক ইন্টারফেস টাইপ
+	accRepo         account.Repository
+}
+
+var _ Service = (*service)(nil)
+
+func NewService(db *sqlx.DB, transRepo transaction.Repository, accRepo account.Repository) Service {
 	return &service{
 		db:              db,
-		transactionRepo: transactionRepo,
-		accountRepo:     accountRepo,
+		transactionRepo: transRepo,
+		accRepo:         accRepo,
 	}
 }

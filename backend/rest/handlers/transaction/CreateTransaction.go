@@ -8,49 +8,38 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type ReqCreateTransaction struct {
-	FromAccountID int64   `json:"from_account_id"`
-	ToAccountID   int64   `json:"to_account_id"`
-	Amount        float64 `json:"amount"`
-	Type          string  `json:"type"` // e.g., "deposit", "withdrawal", "transfer"
+type reqCreateTransaction struct {
+	FromAccountID *int64          `json:"from_account_id"`
+	ToAccountID   *int64          `json:"to_account_id"`
+	Amount        decimal.Decimal `json:"amount"`
+	Currency      string          `json:"currency"`
+	Type          string          `json:"type"`
+	Reference     string          `json:"reference"`
 }
 
 func (h *Handler) CreateTransaction(w http.ResponseWriter, r *http.Request) {
-	var req ReqCreateTransaction
-
+	var req reqCreateTransaction
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	// validate amount
-	if req.Amount <= 0 {
-		http.Error(w, "Amount must be greater than zero", http.StatusBadRequest)
-		return
-	}
-
-	// validate type
-	validTypes := map[string]bool{
-		"deposit":  true,
-		"withdraw": true,
-		"transfer": true,
-	}
-
+	validTypes := map[string]bool{"deposit": true, "withdraw": true, "transfer": true}
 	if !validTypes[req.Type] {
-		http.Error(w, "Invalid transaction type", http.StatusBadRequest)
+		http.Error(w, "invalid transaction type", http.StatusBadRequest)
 		return
 	}
 
-	tx := domain.Transaction{
+	createdTx, err := h.svc.CreateTransaction(domain.Transaction{
 		FromAccountID: req.FromAccountID,
 		ToAccountID:   req.ToAccountID,
-		Amount:        decimal.NewFromFloat(req.Amount),
+		Amount:        req.Amount,
+		Currency:      req.Currency,
 		Type:          req.Type,
-	}
-
-	createdTx, err := h.svc.CreateTransaction(tx)
+		Reference:     req.Reference,
+	})
 	if err != nil {
-		http.Error(w, "Failed to create transaction: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

@@ -11,8 +11,5 @@ type Handler struct {
 }
 
 func NewHandler(cnf *config.Config, svc svc.Service) *Handler {
-	return &Handler{
-		cnf: cnf,
-		svc: svc,
-	}
+	return &Handler{cnf: cnf, svc: svc}
 }

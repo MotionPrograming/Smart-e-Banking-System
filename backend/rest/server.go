@@ -1,10 +1,13 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"time"
 
 	"smart-e-banking/backend/config"
 	account "smart-e-banking/backend/rest/handlers/account"
@@ -51,10 +54,28 @@ func (server *Server) Start() {
 	wrappedMux := manager.WrapMux(mux)
 
 	addr := ":" + strconv.Itoa(server.cnf.HTTPPort)
-	fmt.Println("Server running on:", addr)
+	fmt.Printf("Server running on: %s\n", addr)
 
-	if err := http.ListenAndServe(addr, wrappedMux); err != nil {
-		fmt.Println("Error starting server:", err)
-		os.Exit(1)
+	srv := &http.Server{
+		Addr:         addr,
+		Handler:      wrappedMux,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Println("Server error:", err)
+			os.Exit(1)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+
+	<-quit
+	fmt.Println("Shutting down server...")
+
+	srv.Shutdown(context.Background())
 }

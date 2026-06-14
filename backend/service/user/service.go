@@ -1,20 +1,15 @@
 package user
 
-import "smart-e-banking/backend/domain"
+import (
+	userRepo "smart-e-banking/backend/repository/user"
+)
 
 type service struct {
-	usrRepo UserRepo
+	usrRepo userRepo.Repository
 }
 
-func NewService(usrRepo UserRepo) Service {
-	return &service{
-		usrRepo: usrRepo,
-	}
-}
+var _ Service = (*service)(nil)
 
-type UserRepo interface {
-	CreateUser(user domain.User) (*domain.User, error)
-	GetUserByEmail(email string) (*domain.User, error)
-	GetUserByID(id int64) (*domain.User, error)
-	EmailExists(email string) (bool, error)
+func NewService(usrRepo userRepo.Repository) Service {
+	return &service{usrRepo: usrRepo}
 }

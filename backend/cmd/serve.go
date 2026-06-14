@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"os"
 
 	"smart-e-banking/backend/config"
 	"smart-e-banking/backend/infra/db"
@@ -28,31 +27,20 @@ func Serv() {
 
 	fmt.Printf("%+v\n", cnf.DB)
 
-	// Database connection
 	conn, err := db.NewConnection(cnf.DB)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatalf("DB connection failed: %v", err)
 	}
 
-	// Run migrations
-	err = db.MigrateDB(conn, "./backend/migration")
-	if err != nil {
+	if err := db.MigrateDB(conn, "./backend/migration"); err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}
-
-	// ======================
-	// Repositories
-	// ======================
 
 	usrRepo := userRepoPkg.NewUserRepository(conn)
 	accRepo := accountRepoPkg.NewAccountRepository(conn)
 	transRepo := transactionRepoPkg.NewTransactionRepository(conn)
 
 	usrSvc := userService.NewService(usrRepo)
-
-	// IMPORTANT:
-	// Transaction service needs BOTH repositories
 
 	accSvc := accountService.NewService(
 		conn, accRepo, transRepo,
@@ -63,9 +51,7 @@ func Serv() {
 	)
 
 	userH := userHandler.NewHandler(cnf, usrSvc)
-
 	accH := accountHandler.NewHandler(cnf, accSvc)
-
 	transH := transactionHandler.NewHandler(cnf, transSvc)
 
 	srv := server.NewServer(

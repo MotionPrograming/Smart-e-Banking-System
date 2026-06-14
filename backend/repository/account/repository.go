@@ -13,9 +13,14 @@ type Repository interface {
 	GetAccountByID(accountID int64) (*domain.Account, error)
 	GetAccountsByUserID(userID int64) ([]domain.Account, error)
 
-	UpdateAccount(account *domain.Account) error
+	// UpdateBalance must run inside a caller-managed *sqlx.Tx.
+	UpdateBalance(tx *sqlx.Tx, acc *domain.Account) error
+	// UpdateAccount handles non-balance field changes without an explicit tx.
+	UpdateAccount(acc *domain.Account) error
+
 	LockAccountForUpdate(tx *sqlx.Tx, id int64) (*domain.Account, error)
 }
+
 type accountRepository struct {
 	db *sqlx.DB
 }

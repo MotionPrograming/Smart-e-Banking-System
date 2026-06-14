@@ -7,7 +7,7 @@ import (
 )
 
 type Repository interface {
-	CreateTransaction(r domain.Transaction) (*domain.Transaction, error)
+	CreateTransaction(tx domain.Transaction) (*domain.Transaction, error)
 	GetTransactionByID(transactionID int64) (*domain.Transaction, error)
 	GetTransactionsByAccountID(accountID int64) ([]domain.Transaction, error)
 }
@@ -19,7 +19,5 @@ type transactionRepository struct {
 var _ Repository = (*transactionRepository)(nil)
 
 func NewTransactionRepository(db *sqlx.DB) Repository {
-	return &transactionRepository{
-		db: db,
-	}
+	return &transactionRepository{db: db}
 }

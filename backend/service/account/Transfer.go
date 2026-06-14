@@ -1,74 +1,76 @@
 package account
 
 import (
-	"fmt"
+	"errors"
 	"smart-e-banking/backend/domain"
 
 	"github.com/shopspring/decimal"
 )
 
 func (s *service) Transfer(fromAccountID, toAccountID int64, amount decimal.Decimal) error {
-
 	if amount.LessThanOrEqual(decimal.Zero) {
-		return fmt.Errorf("invalid amount")
+		return errors.New("transfer amount must be greater than zero")
+	}
+	if fromAccountID == toAccountID {
+		return errors.New("cannot transfer to the same account")
 	}
 
 	tx, err := s.db.Beginx()
 	if err != nil {
 		return err
 	}
-
 	defer func() {
 		if err != nil {
 			_ = tx.Rollback()
 		}
 	}()
 
-	var fromAccount, toAccount *domain.Account
-
-	// 🔒 deadlock-safe lock order
+	// Always lock in ascending ID order to prevent deadlocks.
+	var fromAcc, toAcc *domain.Account
 	if fromAccountID < toAccountID {
-
-		fromAccount, err = s.accountRepo.LockAccountForUpdate(tx, fromAccountID)
+		fromAcc, err = s.accountRepo.LockAccountForUpdate(tx, fromAccountID)
 		if err != nil {
 			return err
 		}
-
-		toAccount, err = s.accountRepo.LockAccountForUpdate(tx, toAccountID)
+		toAcc, err = s.accountRepo.LockAccountForUpdate(tx, toAccountID)
 		if err != nil {
 			return err
 		}
-
 	} else {
-
-		toAccount, err = s.accountRepo.LockAccountForUpdate(tx, toAccountID)
+		toAcc, err = s.accountRepo.LockAccountForUpdate(tx, toAccountID)
 		if err != nil {
 			return err
 		}
-
-		fromAccount, err = s.accountRepo.LockAccountForUpdate(tx, fromAccountID)
+		fromAcc, err = s.accountRepo.LockAccountForUpdate(tx, fromAccountID)
 		if err != nil {
 			return err
 		}
 	}
 
-	if fromAccount == nil || toAccount == nil {
-		return fmt.Errorf("account not found")
+	if fromAcc.Status != "active" || toAcc.Status != "active" {
+		err = errors.New("one or both accounts are not active")
+		return err
 	}
-
-	if fromAccount.Balance.LessThan(amount) {
-		return fmt.Errorf("insufficient balance")
-	}
-
-	fromAccount.Balance = fromAccount.Balance.Sub(amount)
-	toAccount.Balance = toAccount.Balance.Add(amount)
-
-	err = s.accountRepo.UpdateAccount(fromAccount)
-	if err != nil {
+	if fromAcc.Balance.LessThan(amount) {
+		err = errors.New("insufficient balance")
 		return err
 	}
 
-	err = s.accountRepo.UpdateAccount(toAccount)
+	fromAcc.Balance = fromAcc.Balance.Sub(amount)
+	toAcc.Balance = toAcc.Balance.Add(amount)
+
+	if err = s.accountRepo.UpdateBalance(tx, fromAcc); err != nil {
+		return err
+	}
+	if err = s.accountRepo.UpdateBalance(tx, toAcc); err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`
+		INSERT INTO transactions
+		    (from_account_id, to_account_id, amount, currency, type, status)
+		VALUES (?, ?, ?, ?, 'transfer', 'completed')
+	`, fromAccountID, toAccountID, amount, fromAcc.Currency)
 	if err != nil {
 		return err
 	}

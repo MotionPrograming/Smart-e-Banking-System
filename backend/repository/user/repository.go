@@ -20,7 +20,5 @@ type userRepository struct {
 var _ Repository = (*userRepository)(nil)
 
 func NewUserRepository(db *sqlx.DB) Repository {
-	return &userRepository{
-		db: db,
-	}
+	return &userRepository{db: db}
 }

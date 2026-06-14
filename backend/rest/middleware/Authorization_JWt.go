@@ -2,13 +2,14 @@ package middleware
 
 import (
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/base64"
-	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
+
+	"smart-e-banking/backend/util"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type contextKey string
@@ -18,79 +19,55 @@ const UserIDKey contextKey = "user_id"
 func (m *Middlewares) AuthorizationJWT(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// 1. Get Authorization header
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			http.Error(w, "Unauthorized: Missing Header", http.StatusUnauthorized)
+			http.Error(w, "Unauthorized: Missing token", http.StatusUnauthorized)
 			return
 		}
 
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			http.Error(w, "Unauthorized: Invalid Header Format", http.StatusUnauthorized)
+			http.Error(w, "Unauthorized: Invalid format", http.StatusUnauthorized)
 			return
 		}
 
-		token := parts[1]
+		tokenStr := parts[1]
 
-		tokenParts := strings.Split(token, ".")
-		if len(tokenParts) != 3 {
-			http.Error(w, "Unauthorized: Invalid Token Format", http.StatusUnauthorized)
+		token, err := jwt.ParseWithClaims(
+			tokenStr,
+			&util.Payload{},
+			func(token *jwt.Token) (interface{}, error) {
+
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("unauthorized: invalid signing method")
+				}
+
+				if token.Method.Alg() != jwt.SigningMethodHS256.Alg() {
+					return nil, fmt.Errorf("unauthorized: only HS256 allowed")
+				}
+
+				return []byte(m.cnf.JWTSecretKey), nil
+			},
+		)
+
+		if err != nil || !token.Valid {
+			http.Error(w, "Unauthorized: Invalid token", http.StatusUnauthorized)
 			return
 		}
 
-		headerB64 := tokenParts[0]
-		payloadB64 := tokenParts[1]
-		signature := tokenParts[2]
-
-		message := headerB64 + "." + payloadB64
-
-		// 2. Verify Signature (Raw byte comparison to prevent timing attacks)
-		h := hmac.New(sha256.New, []byte(m.cnf.JWTSecretKey))
-		h.Write([]byte(message))
-		expectedMac := h.Sum(nil)
-
-		// ক্লায়েন্ট থেকে আসা সিগনেচার ডিকোড করুন
-		actualMac, err := base64.RawURLEncoding.DecodeString(signature)
-		if err != nil {
-			http.Error(w, "Unauthorized: Invalid Signature Base64", http.StatusUnauthorized)
+		claims, ok := token.Claims.(*util.Payload)
+		if !ok {
+			http.Error(w, "Unauthorized: Invalid claims", http.StatusUnauthorized)
 			return
 		}
 
-		// hmac.Equal দিয়ে র' বাইট তুলনা (শতভাগ নিরাপদ)
-		if !hmac.Equal(actualMac, expectedMac) {
-			http.Error(w, "Unauthorized: Signature Mismatch", http.StatusUnauthorized)
-			return
-		}
-
-		// 3. Decode Payload
-		payloadBytes, err := base64.RawURLEncoding.DecodeString(payloadB64)
-		if err != nil {
-			http.Error(w, "Unauthorized: Invalid Payload Base64", http.StatusUnauthorized)
-			return
-		}
-
-		var claims struct {
-			Sub int64 `json:"sub"`
-			Exp int64 `json:"exp"`
-		}
-
-		if err := json.Unmarshal(payloadBytes, &claims); err != nil {
-			http.Error(w, "Unauthorized: Malformed Claims", http.StatusUnauthorized)
-			return
-		}
-
-		// 4. Expiry Check
-		if time.Now().Unix() > claims.Exp {
+		// expiry check (extra safety)
+		if claims.ExpiresAt != nil && claims.ExpiresAt.Time.Before(time.Now()) {
 			http.Error(w, "Token expired", http.StatusUnauthorized)
 			return
 		}
 
-		// 5. Inject User into Context
 		ctx := context.WithValue(r.Context(), UserIDKey, claims.Sub)
-		r = r.WithContext(ctx)
-
-		// 6. Continue
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

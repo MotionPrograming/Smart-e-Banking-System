@@ -1,48 +1,33 @@
 package user
 
 import (
-	"fmt"
 	"smart-e-banking/backend/domain"
 )
 
 func (r *userRepository) CreateUser(user domain.User) (*domain.User, error) {
 	query := `
-	INSERT INTO users (
-		name,
-		email,
-		password,
-		phone,
-		role,
-		created_at,
-		updated_at
-	)
-	VALUES (
-		:name,
-		:email,
-		:password,
-		:phone,
-		:role,
-		:created_at,
-		:updated_at
-	)
-	RETURNING id
+		INSERT INTO users (name, email, password_hash, phone, role, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
-
-	var userID int64
-
-	rows, err := r.db.NamedQuery(query, user)
+	result, err := r.db.Exec(
+		query,
+		user.Name,
+		user.Email,
+		user.PasswordHash,
+		user.Phone,
+		user.Role,
+		user.CreatedAt,
+		user.UpdatedAt,
+	)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
-	defer rows.Close()
 
-	if rows.Next() {
-		if err := rows.Scan(&userID); err != nil {
-			return nil, err
-		}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
 	}
 
-	user.ID = userID
+	user.ID = id
 	return &user, nil
 }

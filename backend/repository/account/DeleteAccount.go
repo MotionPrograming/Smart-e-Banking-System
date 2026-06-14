@@ -3,14 +3,11 @@ package account
 import "errors"
 
 func (r *accountRepository) DeleteAccount(id int64) error {
-
-	query := `
-		UPDATE accounts
-		SET status = 'closed'
-		WHERE id = ? AND status = 'active'
-	`
-
-	result, err := r.db.Exec(query, id)
+	result, err := r.db.Exec(
+		`UPDATE accounts SET status = 'closed', updated_at = NOW()
+		 WHERE id = ? AND status = 'active'`,
+		id,
+	)
 	if err != nil {
 		return err
 	}
@@ -19,10 +16,8 @@ func (r *accountRepository) DeleteAccount(id int64) error {
 	if err != nil {
 		return err
 	}
-
 	if rows == 0 {
 		return errors.New("account not found or already closed")
 	}
-
 	return nil
 }

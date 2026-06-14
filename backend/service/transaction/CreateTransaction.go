@@ -1,4 +1,4 @@
-package transaction // ফোল্ডার: backend/service/transaction/
+package transaction
 
 import (
 	"errors"
@@ -7,20 +7,15 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (h *service) CreateTransaction(tx domain.Transaction) (*domain.Transaction, error) {
-
-	// 🔐 validation
+func (s *service) CreateTransaction(tx domain.Transaction) (*domain.Transaction, error) {
 	if tx.Amount.LessThanOrEqual(decimal.Zero) {
-		return nil, errors.New("invalid transaction amount")
+		return nil, errors.New("transaction amount must be greater than zero")
 	}
-
 	if tx.Type == "" {
-		return nil, errors.New("transaction type required")
+		return nil, errors.New("transaction type is required")
 	}
-
 	if tx.Status == "" {
 		tx.Status = "completed"
 	}
-
-	return h.transactionRepo.CreateTransaction(tx)
+	return s.transactionRepo.CreateTransaction(tx)
 }

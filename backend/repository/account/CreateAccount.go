@@ -12,25 +12,13 @@ func (r *accountRepository) CreateAccount(
 	accountType string,
 	initialBalance decimal.Decimal,
 ) (*domain.Account, error) {
-
 	accountNumber := util.GenerateAccountNumber()
 
-	query := `
-		INSERT INTO accounts
-		(user_id, account_number, balance, currency, account_type, status)
-		VALUES (?, ?, ?, ?, ?, ?)
-	`
-
 	result, err := r.db.Exec(
-		query,
-		userID,
-		accountNumber,
-		initialBalance,
-		"BDT",
-		accountType,
-		"active",
+		`INSERT INTO accounts (user_id, account_number, balance, currency, account_type, status)
+		 VALUES (?, ?, ?, 'BDT', ?, 'active')`,
+		userID, accountNumber, initialBalance, accountType,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -40,16 +28,9 @@ func (r *accountRepository) CreateAccount(
 		return nil, err
 	}
 
-	// Return full object
 	var acc domain.Account
-	err = r.db.Get(
-		&acc,
-		`SELECT * FROM accounts WHERE id = ?`,
-		id,
-	)
-	if err != nil {
+	if err := r.db.Get(&acc, `SELECT * FROM accounts WHERE id = ?`, id); err != nil {
 		return nil, err
 	}
-
 	return &acc, nil
 }
