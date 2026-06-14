@@ -1,0 +1,12 @@
+CREATE TABLE accounts (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    account_number VARCHAR(30) NOT NULL UNIQUE,
+    balance DECIMAL(20, 6) NOT NULL DEFAULT 0,
+    currency VARCHAR(10) DEFAULT 'BDT',
+    account_type VARCHAR(20) DEFAULT 'savings',
+    status VARCHAR(20) DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
