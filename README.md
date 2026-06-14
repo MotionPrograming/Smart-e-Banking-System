@@ -161,11 +161,11 @@ The primary objective of this project is to model a real-world banking backend s
 
 ## 👨‍💻 Developer
 
-**Md Abdullah Rajeeb** Backend Developer | System Design Enthusiast  
+**Md Abdullah Rajeb**
+Backend Developer | System Design Enthusiast
 
-* **GitHub:** [@MotionProgramming](https://github.com/MotionProgramming)
-* **Project Repository:** [Smart-e-Banking-System](https://github.com/MotionProgramming/Smart-e-Banking-System)
-
+- GitHub: https://github.com/MotionPrograming
+- Project Repository: https://github.com/MotionPrograming/Smart-e-Banking-System
 
 ---
 
