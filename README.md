@@ -162,7 +162,7 @@ The primary objective of this project is to model a real-world banking backend s
 
 **Md Abdullah Rajeeb** Backend Developer | System Design Enthusiast
 
-*GitHub:* [MotionProgramming](https://www.google.com/search?q=https://github.com/MotionProgramming)
+*GitHub:* [[MotionProgramming](https://www.google.com/search?q=https://github.com/MotionProgramming](https://github.com/MotionPrograming/))
 
 ---
 
