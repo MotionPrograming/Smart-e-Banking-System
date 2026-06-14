@@ -1,0 +1,38 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, consumed by `go tool cover`
+*.out
+
+# Dependency directories (suggested to use go mod instead)
+# vendor/
+
+# Go workspaces
+go.work
+go.work.sum
+
+# Environment variables (Sensitive Info)
+.env
+*.env
+config.yaml
+!config.example.yaml
+
+# IDE / Editor configurations
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS-specific files
+.DS_Store
+Thumbs.db
